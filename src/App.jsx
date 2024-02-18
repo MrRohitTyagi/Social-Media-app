@@ -1,11 +1,12 @@
-import { Button } from "@/components/ui/button";
+import { Route, Routes } from "react-router-dom";
+import LoginPage from "./Components/LoginPage";
 
 function App() {
   return (
     <>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Routes>
+        <Route path="login" element={<LoginPage />} />
+      </Routes>
     </>
   );
 }
