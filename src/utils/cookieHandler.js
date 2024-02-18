@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 // Function to set a cookie
-export const setCookie = (value, name) => {
+export const setCookie = (name, value) => {
   Cookies.set(name, value);
 };
 

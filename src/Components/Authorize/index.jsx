@@ -39,4 +39,5 @@ const AuthorizeUser = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+export { AuthContext };
 export default AuthorizeUser;

@@ -2,6 +2,7 @@ import { memo, useCallback, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence, motion } from "framer-motion";
+import * as yup from "yup";
 
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -16,6 +17,8 @@ import {
 
 import "./loginStyles.css";
 import InputFileUpload from "@/coreComponents/InputFileUpload";
+import { Login } from "@/Controllers/loginController";
+import { setCookie } from "@/utils/cookieHandler";
 // import { uploadImage } from "@/utils/imageUploadHelper";
 
 const varients = {
@@ -35,18 +38,38 @@ const LoginScreen = memo(() => {
   const [picture, setPicture] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const handleSubmit = useCallback(async (event, payload, isGoogleLogin) => {
-    try {
-      setIsLoading(true);
-      if (event) event.preventDefault();
+  const UserSchema = yup.object().shape({
+    username: isSigninForm
+      ? yup.string().notRequired()
+      : yup.string().min(3).max(30).required(),
+    email: yup.string().email("Enter correct email"),
+    password: yup.string().min(6),
+  });
 
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const handleSubmit = useCallback(
+    async (event, payload, isGoogleLogin) => {
+      try {
+        setIsLoading(true);
+        if (event) event.preventDefault();
+        const finalPayload = isGoogleLogin ? payload : formData;
+
+        const validatedUser = await UserSchema.validateSync(finalPayload);
+        console.log("User is valid:", validatedUser);
+
+        const loginData = await Login(finalPayload);
+        setCookie("authToken", loginData.token);
+        window.location.href = "/homepage";
+        setIsLoading(false);
+      } catch (error) {
+        setErrors({ [error.path]: error.message });
+        window.err = error;
+        setIsLoading(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [formData, UserSchema]
+  );
 
   const handleChange = useCallback(
     (e) => {
@@ -84,8 +107,8 @@ const LoginScreen = memo(() => {
                 <TextField
                   size="large"
                   label="Name"
-                  error={errors.username}
-                  helperText={errors.username}
+                  error={errors?.username}
+                  helperText={errors?.username}
                   type="text"
                   id="username"
                   name="username"
@@ -115,9 +138,9 @@ const LoginScreen = memo(() => {
             >
               <TextField
                 label="Email"
-                error={errors.email}
-                helperText={errors.email}
-                type="email"
+                error={errors?.email}
+                helperText={errors?.email}
+                type="text"
                 id="email"
                 name="email"
                 value={formData.email}
@@ -134,8 +157,8 @@ const LoginScreen = memo(() => {
             >
               <TextField
                 label="Password"
-                error={errors.password}
-                helperText={errors.password}
+                error={errors?.password}
+                helperText={errors?.password}
                 type={visible ? "text" : "password"}
                 id="password"
                 name="password"
@@ -186,7 +209,11 @@ const LoginScreen = memo(() => {
               animate="visible"
               initial="hidden"
             >
-              <h5>Already have a account ?</h5>
+              {isSigninForm ? (
+                <h5>Create a new Account ?</h5>
+              ) : (
+                <h5>Already have a account ?</h5>
+              )}
               <h6 onClick={() => setIsSigninForm((prev) => !prev)}>
                 {isSigninForm ? "Sign - Up" : "Sign - In"}
               </h6>
@@ -212,7 +239,7 @@ const LoginScreen = memo(() => {
                     const res = jwtDecode(credentialResponse.credential);
                     console.log("res", res);
                     const payload = {
-                      name: res.name,
+                      username: res.name,
                       email: res.email,
                       profile: res.picture,
                       password: res.sub,
