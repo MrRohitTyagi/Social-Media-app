@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence, motion } from "framer-motion";
@@ -92,7 +92,7 @@ const LoginScreen = memo(() => {
                   value={formData.username}
                   onChange={handleChange}
                   fullWidth
-                  variant="outlined"
+                  variant="standard"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment>
@@ -122,7 +122,7 @@ const LoginScreen = memo(() => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                variant="outlined"
+                variant="standard"
                 fullWidth
               />
             </motion.div>
@@ -153,7 +153,7 @@ const LoginScreen = memo(() => {
                   ),
                 }}
                 onChange={handleChange}
-                variant="outlined"
+                variant="standard"
                 fullWidth
               />
             </motion.div>
@@ -203,23 +203,28 @@ const LoginScreen = memo(() => {
               />
             </div>
             <div className="google-button-login">
-              <GoogleLogin
-                cancel_on_tap_outside
-                onSuccess={(credentialResponse) => {
-                  const res = jwtDecode(credentialResponse.credential);
-                  const payload = {
-                    username: res.name,
-                    email: res.email,
-                    picture: res.picture,
-                    password: res.sub,
-                  };
+              <div className="google-button-wrapper">
+                <GoogleLogin
+                  type="standard"
+                  theme="filled_black"
+                  cancel_on_tap_outside
+                  onSuccess={(credentialResponse) => {
+                    const res = jwtDecode(credentialResponse.credential);
+                    console.log("res", res);
+                    const payload = {
+                      name: res.name,
+                      email: res.email,
+                      profile: res.picture,
+                      password: res.sub,
+                    };
 
-                  handleSubmit(undefined, payload, true);
-                }}
-                onError={(error) => {
-                  console.log("error", error);
-                }}
-              />
+                    handleSubmit(undefined, payload, true);
+                  }}
+                  onError={(error) => {
+                    console.log("error", error);
+                  }}
+                />
+              </div>
             </div>
           </form>
         </div>
